@@ -1,3 +1,4 @@
+#include<algorithm>
 #include<string>
 #include<vector>
 #include<random>
@@ -54,8 +55,8 @@ void Battle::startBattle() {
 
 	// 初始化牌堆
 	cardDefs = {
-		{ "Strike", 1, { {EffectType::Damage, 6} } },//攻击卡，消耗1能量，造成6点伤害
-		{ "Defend", 1, { {EffectType::Block, 5} } },//防御卡，消耗1能量，获得5点格挡
+		{ "打击", 1, { {EffectType::Damage, 6} } },//攻击卡，消耗1能量，造成6点伤害
+		{ "防御", 1, { {EffectType::Block, 5} } },//防御卡，消耗1能量，获得5点格挡
 	};
 
 	// 初始化牌堆,每种卡牌10张
@@ -72,18 +73,20 @@ void Battle::startBattle() {
 void Battle::startTurn() {
 	turn++;
 	player.block = 0;
-	if (energyMax < energyCap) energyMax++;//每回合增加能量上限，直到达到最大值
+	if (energyMax < energyCap && turn > 1) energyMax++;//每回合增加能量上限，直到达到最大值
 	energy = energyMax;//回合开始时能量恢复到当前上限
-	drawCards(drawPerTurn);//抽取回合开始的牌
+	if (turn > 1) drawCards(drawPerTurn);//抽取回合开始的牌
 }
 
 PlayResult Battle::playCard(int handIndex) {
 	if (handIndex < 0 || handIndex >= hand.size()) return PlayResult::InvalidIndex;//检查手牌索引是否合法
 
-	CardInstance& card = hand[handIndex];
+	CardInstance card = hand[handIndex];
+	if (card.defId < 0 || card.defId >= (int)cardDefs.size()) return PlayResult::InvalidIndex;
 	CardDef& def = cardDefs[card.defId];
 
 	int totalCost = def.baseCost + card.costDelta;//计算卡牌总能量消耗
+	if (totalCost < 0)totalCost = 0;//能量消耗不能为负数，虽然现在没有负能量消耗的卡，但未来可能会有，所以加个保护
 	if (energy < totalCost) return PlayResult::NotEnoughEnergy;//检查是否有足够的能量
 
 	energy -= totalCost;//扣除能量
@@ -104,8 +107,8 @@ void Battle::endTurn() {
 }
 
 void Battle::enemyAct() {
-	// 简单的敌人行为：每回合攻击玩家，造成5点伤害
-	applyDamage(player, 5);
+	// 简单的敌人行为：每回合攻击玩家，造成6点伤害
+	applyDamage(player, 6);
 }
 
 void Battle::endBattle() {
