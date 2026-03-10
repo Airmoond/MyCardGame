@@ -7,7 +7,7 @@
 // battle.cpp 作为 battle.h 的实现文件，包含了 Battle 类的成员函数定义
 
 void Battle::applyDamage(Entity& target, int damage) {//对目标实体造成伤害，考虑格挡
-	int damageAfterBlock = std::max(0, target.block - damage);
+	int damageAfterBlock = std::max(0, damage - target.block);
 	target.block = std::max(0, target.block - damage);
 	target.hp -= damageAfterBlock;
 }
@@ -39,9 +39,18 @@ int Battle::drawCards(int n) {
 }
 
 void Battle::startBattle() {
+	turn = 0;
+	energyMax = 2;
+	energy = 2;
+
+
 	// 初始化玩家和敌人状态
 	player = { 50, 50, 0 };//玩家初始HP和最大HP为50，初始格挡为0
 	enemy = { 40, 40, 0 };//敌人初始HP和最大HP为40，初始格挡为0
+
+	hand.clear();
+	drawpile.clear();
+	discard.clear();
 
 	// 初始化牌堆
 	cardDefs = {
@@ -62,12 +71,13 @@ void Battle::startBattle() {
 
 void Battle::startTurn() {
 	turn++;
+	player.block = 0;
 	if (energyMax < energyCap) energyMax++;//每回合增加能量上限，直到达到最大值
 	energy = energyMax;//回合开始时能量恢复到当前上限
 	drawCards(drawPerTurn);//抽取回合开始的牌
 }
 
-PlayResult Battle::playCard(int handIndex) {//这部分代码尚未检查！
+PlayResult Battle::playCard(int handIndex) {
 	if (handIndex < 0 || handIndex >= hand.size()) return PlayResult::InvalidIndex;//检查手牌索引是否合法
 
 	CardInstance& card = hand[handIndex];
@@ -78,20 +88,44 @@ PlayResult Battle::playCard(int handIndex) {//这部分代码尚未检查！
 
 	energy -= totalCost;//扣除能量
 
-	// 执行卡牌效果
-	for (const Effect& effect : def.effects) {
-		switch (effect.type) {
-		case EffectType::Damage:
-			applyDamage(enemy, effect.value);//对敌人造成伤害
-			break;
-		case EffectType::Block:
-			gainBlock(player, effect.value);//给玩家增加格挡
-			break;
-		}
-	}
+	applyCardEffects(card);
 
 	discard.push_back(card);//将使用过的牌放入弃牌堆
 	hand.erase(hand.begin() + handIndex);//从手牌中移除这张牌
 
 	return PlayResult::Ok;//出牌成功
+}
+
+void Battle::endTurn() {
+	for (const auto& card : hand) {//回合结束时将手牌中的牌全部放入弃牌堆
+		discard.push_back(card);
+	}
+	hand.clear();
+}
+
+void Battle::enemyAct() {
+	// 简单的敌人行为：每回合攻击玩家，造成5点伤害
+	applyDamage(player, 5);
+}
+
+void Battle::endBattle() {
+	// 这里可以添加结算逻辑，比如显示胜利/失败界面，计算奖励等，现在暂时先空着
+}
+
+void Battle::applyCardEffects(const CardInstance& card) {//根据卡牌实例应用其效果
+	const CardDef& cardDef = cardDefs[card.defId];//根据卡牌实例的defId找到对应的卡牌定义
+	for (const Effect& oneEffect : cardDef.effects) {//遍历卡牌定义中的每个效果，应用到目标实体上
+		applyEffect(oneEffect);
+	}
+}
+
+void Battle::applyEffect(const Effect& effect) {//根据效果类型应用单个效果
+	switch (effect.type) {//根据效果类型执行不同的操作
+	case EffectType::Damage:
+		applyDamage(enemy, effect.value);
+		break;
+	case EffectType::Block:
+		gainBlock(player, effect.value);
+		break;
+	}
 }

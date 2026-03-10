@@ -64,7 +64,7 @@ public:
 	PlayResult playCard(int handIndex);//出牌，返回结果
 
 	void applyCardEffects(const CardInstance& card);//应用卡牌效果
-	void applyEffect(const Effect& effect, Entity& target);//应用单个效果
+	void applyEffect(const Effect& effect);//应用单个效果
 
 	void endTurn();
 	void enemyAct();
