@@ -15,15 +15,36 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="actions.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="battle.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="battle_runner.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="game_content.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="battle.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="actions.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="battle_runner.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="battle_types.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="game_content.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
