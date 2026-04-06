@@ -3,8 +3,8 @@
 
 #include "battle.h"
 
-void Battle::initialize(const BattleConfig& config) {
-    phase = BattlePhase::BattleStart;
+void Battle::initialize(const BattleConfig& config) {//搭建一场新战斗
+    phase = BattlePhase::BattleStart;//第一步，初始化基础规则参数
     turn = 0;
     energyCap = config.energyCap;
     energyMax = config.startingEnergy;
@@ -14,16 +14,16 @@ void Battle::initialize(const BattleConfig& config) {
     handLimit = config.handLimit;
     enemyData = config.enemy;
 
-    player = { config.playerMaxHp, config.playerMaxHp, 0 };
+    player = { config.playerMaxHp, config.playerMaxHp, 0 };//第二步，初始化玩家和敌人的运行时状态
     enemy = { enemyData.maxHp, enemyData.maxHp, 0 };
 
-    cardDefs = config.cardDefs;
+    cardDefs = config.cardDefs;//第三步，准备卡牌系统
     hand.clear();
     discard.clear();
     drawpile = config.startingDeck;
     actionQueue_.clear();
 
-    std::shuffle(drawpile.begin(), drawpile.end(), rng);
+    std::shuffle(drawpile.begin(), drawpile.end(), rng);//第四步，洗牌并抽开局手牌
     drawCards(openingHandNum);
     updateOutcome();
 }

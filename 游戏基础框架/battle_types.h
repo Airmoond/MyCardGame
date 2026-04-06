@@ -61,7 +61,7 @@ struct EnemyData {
     int attackDamage = 0;
 };
 
-struct BattleConfig {
+struct BattleConfig {//战斗配置
     int playerMaxHp = 50;
     int startingEnergy = 2;
     int energyCap = 5;
