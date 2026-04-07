@@ -7,39 +7,28 @@ BattleRunner::BattleRunner(Battle& battle, BattleConfig config)
 }
 
 void BattleRunner::startBattle() {
+    // startBattle 会把战斗初始化，然后一口气推进到下一个可输入节点。
     battle_.initialize(config_);
-    update();
+    advanceToNextDecision();
 }
 
 PlayResult BattleRunner::playCard(int handIndex) {
     const PlayResult result = battle_.tryPlayCard(handIndex);
-    update();
+    advanceToNextDecision();
     return result;
 }
 
 void BattleRunner::endPlayerTurn() {
     battle_.endPlayerTurn();
-    update();
+    advanceToNextDecision();
 }
 
-void BattleRunner::update() {
-    // Runner 负责推进非交互阶段，main 只保留输入输出。
-    while (!battle_.isBattleOver()) {
-        if (battle_.phase == BattlePhase::BattleStart ||
-            battle_.phase == BattlePhase::PlayerTurnStart) {
-            battle_.beginPlayerTurn();
-            continue;
+void BattleRunner::advanceToNextDecision() {
+    // Runner 仍然保留“自动推进到下一个玩家决策点”的便利模式，
+    // 但 Battle 本体已经支持逐步推进，适合后续接 Godot 做异步表现。
+    while (!battle_.isBattleOver() && !battle_.canAcceptInput()) {
+        if (!battle_.advance()) {
+            break;
         }
-
-        if (battle_.phase == BattlePhase::EnemyTurnStart) {
-            battle_.queueEnemyTurn();
-            battle_.resolveActions();
-            if (!battle_.isBattleOver()) {
-                battle_.phase = BattlePhase::PlayerTurnStart;
-            }
-            continue;
-        }
-
-        break;
     }
 }

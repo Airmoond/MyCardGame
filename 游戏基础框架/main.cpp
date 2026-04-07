@@ -1,9 +1,9 @@
 #include <algorithm>
-#include <cstdlib>
 #include <ctime>
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <vector>
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
@@ -12,57 +12,75 @@
 #endif
 #include <windows.h>
 
-#include "battle.h"
-#include "battle_runner.h"
-#include "game_content.h"
+#include "battle_bridge.h"
 
 namespace {
 
-std::string describeTarget(EntityId target) {
-    switch (target) {
-    case EntityId::Player:
+// main.cpp 只是控制台演示前端。
+// 它的职责是把 Bridge 返回的数据打印出来，帮助快速观察战斗流程。
+std::string describeTarget(const std::string& target) {
+    if (target == "player") {
         return "自己";
-    case EntityId::Enemy:
+    }
+    if (target == "enemy") {
         return "敌人";
     }
 
     return "未知目标";
 }
 
-std::string describeEffect(const EffectData& effect) {
-    switch (effect.type) {
-    case EffectType::Damage:
+std::string describeEffect(const BridgeCardEffect& effect) {
+    if (effect.type == "damage") {
         return "对" + describeTarget(effect.target) + "造成" + std::to_string(effect.value) + "点伤害";
-    case EffectType::Block:
+    }
+    if (effect.type == "block") {
         return describeTarget(effect.target) + "获得" + std::to_string(effect.value) + "点格挡";
-    case EffectType::Draw:
+    }
+    if (effect.type == "draw") {
         return "抽" + std::to_string(effect.value) + "张牌";
     }
 
     return "未知效果";
 }
 
-std::string describeEffects(const CardData& def) {
-    if (def.effects.empty()) {
+std::string describeEffects(const std::vector<BridgeCardEffect>& effects) {
+    if (effects.empty()) {
         return "无效果";
     }
 
     std::ostringstream output;
-    for (size_t i = 0; i < def.effects.size(); ++i) {
+    for (size_t i = 0; i < effects.size(); ++i) {
         if (i > 0) {
             output << "，";
         }
-        output << describeEffect(def.effects[i]);
+        output << describeEffect(effects[i]);
     }
     return output.str();
 }
 
-std::string describePlayedCardResult(const CardData& def,
-                                     const Entity& playerBefore,
-                                     const Entity& enemyBefore,
-                                     const Battle& battleAfter) {
+std::string describeEnemyIntent(const BridgeEnemyIntent& intent) {
+    if (!intent.known) {
+        return "未知";
+    }
+
+    if (intent.type == "damage" && intent.target == "player") {
+        return "对玩家造成" + std::to_string(intent.value) + "点伤害";
+    }
+    if (intent.type == "block") {
+        return "获得" + std::to_string(intent.value) + "点格挡";
+    }
+    if (intent.type == "draw") {
+        return "抽" + std::to_string(intent.value) + "张牌";
+    }
+
+    return "未知";
+}
+
+std::string describePlayedCardResult(const BridgeCardState& card,
+                                     const BridgeBattleSnapshot& before,
+                                     const BridgeBattleSnapshot& after) {
     std::ostringstream output;
-    output << "你使用了【" << def.name << "】";
+    output << "你使用了【" << card.name << "】";
 
     bool firstDetail = true;
     auto appendDetail = [&](const std::string& text) {
@@ -70,10 +88,11 @@ std::string describePlayedCardResult(const CardData& def,
         firstDetail = false;
     };
 
-    for (const EffectData& effect : def.effects) {
-        if (effect.type == EffectType::Damage && effect.target == EntityId::Enemy) {
-            int blocked = std::max(0, enemyBefore.block - battleAfter.enemy.block);
-            int actualDamage = std::max(0, enemyBefore.hp - battleAfter.enemy.hp);
+    for (const BridgeCardEffect& effect : card.effects) {
+        // 当前控制台文案是通过前后快照推导结果，而不是直接照搬底层事件。
+        if (effect.type == "damage" && effect.target == "enemy") {
+            const int blocked = std::max(0, before.enemy.block - after.enemy.block);
+            const int actualDamage = std::max(0, before.enemy.hp - after.enemy.hp);
             std::ostringstream detail;
             detail << "对敌人造成" << effect.value << "点伤害";
             if (blocked > 0) {
@@ -86,52 +105,79 @@ std::string describePlayedCardResult(const CardData& def,
                 detail << "（实际扣除" << actualDamage << "点生命）";
             }
             appendDetail(detail.str());
-        } else if (effect.type == EffectType::Block && effect.target == EntityId::Player) {
-            int gainedBlock = battleAfter.player.block - playerBefore.block;
+        } else if (effect.type == "block" && effect.target == "player") {
+            const int gainedBlock = after.player.block - before.player.block;
             appendDetail("获得" + std::to_string(gainedBlock) + "点格挡");
-        } else if (effect.type == EffectType::Draw) {
-            appendDetail("抽了" + std::to_string(effect.value) + "张牌");
+        } else if (effect.type == "draw") {
+            const int drawn = static_cast<int>(after.hand.size()) - static_cast<int>(before.hand.size()) + 1;
+            appendDetail("抽了" + std::to_string(std::max(0, drawn)) + "张牌");
         } else {
             appendDetail(describeEffect(effect));
         }
     }
 
-    if (firstDetail) {
-        output << "。";
-    } else {
-        output << "。";
-    }
-
+    output << "。";
     return output.str();
 }
 
-void printStatus(const Battle& battle) {
-    std::cout << "\n====================\n";
-    std::cout << "回合: " << battle.turn << "\n";
-    std::cout << "玩家生命: " << battle.player.hp << "/" << battle.player.maxHp
-              << "  格挡: " << battle.player.block
-              << "  能量: " << battle.energy << "/" << battle.energyMax << "\n";
-    std::cout << battle.enemyData.name << "生命: " << battle.enemy.hp << "/" << battle.enemy.maxHp
-              << "  格挡: " << battle.enemy.block << "\n";
+void printEnemyTurnResult(const std::vector<BridgeBattleEvent>& events) {
+    int totalDamage = 0;
+    int totalBlocked = 0;
+    bool enemyActed = false;
+
+    for (const BridgeBattleEvent& event : events) {
+        if (event.phase == "enemy_acting") {
+            enemyActed = true;
+        }
+
+        if (event.type == "damage_applied" && event.entity == "player") {
+            totalDamage += event.amount;
+            totalBlocked += event.amount2;
+        }
+    }
+
+    if (!enemyActed) {
+        return;
+    }
+
+    std::cout << "敌人行动";
+    if (totalDamage > 0 || totalBlocked > 0) {
+        std::cout << "，对你造成" << totalDamage << "点伤害";
+        if (totalBlocked > 0) {
+            std::cout << "（另有" << totalBlocked << "点被格挡吸收）";
+        }
+    }
+    std::cout << "。\n";
 }
 
-void printHand(const Battle& battle) {
+void printStatus(const BridgeBattleSnapshot& snapshot) {
+    std::cout << "\n====================\n";
+    std::cout << "回合: " << snapshot.turn << "\n";
+    std::cout << "玩家生命: " << snapshot.player.hp << "/" << snapshot.player.maxHp
+              << "  格挡: " << snapshot.player.block
+              << "  能量: " << snapshot.energy << "/" << snapshot.energyMax << "\n";
+    std::cout << snapshot.enemyName << "生命: " << snapshot.enemy.hp << "/" << snapshot.enemy.maxHp
+              << "  格挡: " << snapshot.enemy.block << "\n";
+
+    if (snapshot.enemyIntent.known) {
+        std::cout << "敌人意图: " << describeEnemyIntent(snapshot.enemyIntent) << "\n";
+    }
+}
+
+void printHand(const BridgeBattleSnapshot& snapshot) {
     std::cout << "手牌:\n";
-    for (int i = 0; i < static_cast<int>(battle.hand.size()); ++i) {
-        const CardInstance& card = battle.hand[i];
-        if (card.defId < 0 || card.defId >= static_cast<int>(battle.cardDefs.size())) {
+    for (int i = 0; i < static_cast<int>(snapshot.hand.size()); ++i) {
+        const BridgeCardState& card = snapshot.hand[i];
+        if (card.name.empty()) {
             std::cout << "  [" << i << "] <无效卡牌>\n";
             continue;
         }
 
-        const CardData& def = battle.cardDefs[card.defId];
-        int totalCost = battle.computeCardCost(card);
-
-        std::cout << "  [" << i << "] " << def.name << "  费用=" << totalCost
-                  << "  效果=" << describeEffects(def) << "\n";
+        std::cout << "  [" << i << "] " << card.name << "  费用=" << card.cost
+                  << "  效果=" << describeEffects(card.effects) << "\n";
     }
 
-    if (battle.hand.empty()) {
+    if (snapshot.hand.empty()) {
         std::cout << "  (空)\n";
     }
 }
@@ -160,28 +206,30 @@ void printPlayResult(PlayResult result) {
 }  // namespace
 
 int main() {
-
     SetConsoleOutputCP(CP_UTF8);
     SetConsoleCP(CP_UTF8);
 
-    Battle battle;
-    battle.rng.seed(static_cast<unsigned int>(std::time(nullptr)));
-    BattleRunner runner(battle, createDefaultBattleConfig());
-    runner.startBattle();
+    // 演示程序通过 BattleBridge 间接驱动战斗核心，这和未来的 Godot 接法一致。
+    BattleBridge bridge;
+    bridge.setRandomSeed(static_cast<unsigned int>(std::time(nullptr)));
+    bridge.startDefaultBattle();
+    bridge.advanceUntilNextDecision();
+    bridge.consumeEvents();
 
     std::cout << "简单卡牌战斗演示\n";
     printHelp();
 
     int lastShownTurn = -1;
-    while (!battle.isBattleOver()) {
-        if (battle.phase == BattlePhase::PlayerInput && battle.turn != lastShownTurn) {
+    while (!bridge.isBattleOver()) {
+        const BridgeBattleSnapshot snapshot = bridge.getSnapshot();
+        if (snapshot.phase == "player_input" && snapshot.turn != lastShownTurn) {
             std::cout << "\n玩家回合开始。\n";
-            lastShownTurn = battle.turn;
+            lastShownTurn = snapshot.turn;
         }
 
-        if (battle.phase == BattlePhase::PlayerInput) {
-            printStatus(battle);
-            printHand(battle);
+        if (snapshot.phase == "player_input") {
+            printStatus(snapshot);
+            printHand(snapshot);
             std::cout << "> ";
 
             std::string line;
@@ -201,27 +249,32 @@ int main() {
                     continue;
                 }
 
-                if (handIndex >= 0 && handIndex < static_cast<int>(battle.hand.size())) {
-                    const CardInstance& card = battle.hand[handIndex];
-                    if (card.defId >= 0 && card.defId < static_cast<int>(battle.cardDefs.size())) {
-                        const CardData& def = battle.cardDefs[card.defId];
-                        Entity playerBefore = battle.player;
-                        Entity enemyBefore = battle.enemy;
-                        PlayResult result = runner.playCard(handIndex);
-                        if (result == PlayResult::Ok) {
-                            std::cout << describePlayedCardResult(def, playerBefore, enemyBefore, battle) << "\n";
-                        } else {
-                            printPlayResult(result);
-                        }
-                        continue;
+                if (handIndex >= 0 && handIndex < static_cast<int>(snapshot.hand.size())) {
+                    const BridgeCardState card = snapshot.hand[handIndex];
+                    const BridgeBattleSnapshot before = snapshot;
+                    const PlayResult result = bridge.playCardByInstanceId(card.instanceId);
+                    // 演示程序选择“直接推进到下一个决策点”，省略中间逐步动画。
+                    bridge.advanceUntilNextDecision();
+                    const BridgeBattleSnapshot after = bridge.getSnapshot();
+                    bridge.consumeEvents();
+
+                    if (result == PlayResult::Ok) {
+                        std::cout << describePlayedCardResult(card, before, after) << "\n";
+                    } else {
+                        printPlayResult(result);
                     }
+                    continue;
                 }
 
-                printPlayResult(runner.playCard(handIndex));
+                const PlayResult result = bridge.playCardAtHandIndex(handIndex);
+                bridge.consumeEvents();
+                printPlayResult(result);
             } else if (command == "e") {
-                runner.endPlayerTurn();
-                if (!battle.isBattleOver()) {
-                    std::cout << "敌人行动，对你造成" << battle.enemyData.attackDamage << "点伤害。\n";
+                bridge.endTurn();
+                bridge.advanceUntilNextDecision();
+                const std::vector<BridgeBattleEvent> events = bridge.consumeEvents();
+                if (!bridge.isBattleOver()) {
+                    printEnemyTurnResult(events);
                 }
             } else if (command == "q") {
                 std::cout << "已退出。\n";
@@ -230,14 +283,14 @@ int main() {
                 printHelp();
             }
         } else {
-            // 所有非输入阶段都由 BattleRunner 自动推进，主循环只需等待结果。
+            // Runner 会把演示程序自动推进回玩家输入阶段。
             continue;
         }
     }
 
-    if (battle.phase == BattlePhase::Victory) {
+    if (bridge.getSnapshot().phase == "victory") {
         std::cout << "\n你赢了。\n";
-    } else if (battle.phase == BattlePhase::Defeat) {
+    } else if (bridge.getSnapshot().phase == "defeat") {
         std::cout << "\n你输了。\n";
     }
 

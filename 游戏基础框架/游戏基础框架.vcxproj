@@ -129,6 +129,7 @@
   <ItemGroup>
     <ClCompile Include="actions.cpp" />
     <ClCompile Include="battle.cpp" />
+    <ClCompile Include="battle_bridge.cpp" />
     <ClCompile Include="battle_runner.cpp" />
     <ClCompile Include="game_content.cpp" />
     <ClCompile Include="main.cpp" />
@@ -136,6 +137,7 @@
   <ItemGroup>
     <ClInclude Include="actions.h" />
     <ClInclude Include="battle.h" />
+    <ClInclude Include="battle_bridge.h" />
     <ClInclude Include="battle_runner.h" />
     <ClInclude Include="battle_types.h" />
     <ClInclude Include="game_content.h" />

@@ -30,6 +30,9 @@
     <ClCompile Include="game_content.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="battle_bridge.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="battle.h">
@@ -45,6 +48,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="game_content.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="battle_bridge.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

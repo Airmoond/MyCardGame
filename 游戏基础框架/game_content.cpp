@@ -3,6 +3,7 @@
 #include <vector>
 
 BattleConfig createDefaultBattleConfig() {
+    // 这是一份给演示和联调用的默认内容配置。
     BattleConfig config;
     config.playerMaxHp = 50;
     config.startingEnergy = 2;
@@ -18,9 +19,10 @@ BattleConfig createDefaultBattleConfig() {
     };
 
     // 具体游戏内容只在这一层配置，框架层只消费 BattleConfig。
+    // 当前默认卡组比较简单：10 张打击 + 10 张防御。
     for (int i = 0; i < 10; ++i) {
-        config.startingDeck.push_back({ 0, 0 });
-        config.startingDeck.push_back({ 1, 0 });
+        config.startingDeck.push_back({ -1, 0, 0 });
+        config.startingDeck.push_back({ -1, 1, 0 });
     }
 
     return config;

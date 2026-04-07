@@ -5,6 +5,7 @@
 #include "battle.h"
 
 void ActionQueue::push(std::unique_ptr<GameAction> action) {
+    // 新动作统一排到队尾，保证动作按产生顺序执行。
     actions_.push_back(std::move(action));
 }
 
@@ -38,6 +39,7 @@ PlayCardAction::PlayCardAction(CardInstance card) : card_(card) {
 }
 
 void PlayCardAction::execute(Battle& battle) {
+    // 打牌动作只负责“展开牌面效果”，真正的数值变化由后续基础动作执行。
     battle.expandCardEffects(card_);
 }
 
@@ -46,7 +48,8 @@ DamageAction::DamageAction(EntityId target, int amount)
 }
 
 void DamageAction::execute(Battle& battle) {
-    battle.applyDamage(battle.getEntity(target_), amount_);
+    // 伤害会在 Battle::applyDamage 内部同时处理格挡与掉血。
+    battle.applyDamage(target_, amount_);
 }
 
 GainBlockAction::GainBlockAction(EntityId target, int amount)
@@ -54,13 +57,14 @@ GainBlockAction::GainBlockAction(EntityId target, int amount)
 }
 
 void GainBlockAction::execute(Battle& battle) {
-    battle.gainBlock(battle.getEntity(target_), amount_);
+    battle.gainBlock(target_, amount_);
 }
 
 DrawCardsAction::DrawCardsAction(int amount) : amount_(amount) {
 }
 
 void DrawCardsAction::execute(Battle& battle) {
+    // 抽牌过程中如果抽牌堆空了，Battle 内部会自动判断是否洗弃牌堆。
     battle.drawCards(amount_);
 }
 
