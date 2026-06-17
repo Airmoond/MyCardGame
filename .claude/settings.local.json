@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C \"e:/MyGame/卡牌游戏\" log --oneline --all)",
+      "Bash(git -C \"e:/MyGame/卡牌游戏\" log --format=\"%H %s\" --all)",
+      "Bash(where godot *)",
+      "Bash(git -C \"e:/MyGame/卡牌游戏/\" log --oneline -10)",
+      "Bash(where choco *)",
+      "Bash(where winget *)",
+      "Bash(powershell -Command \"\\(New-Object -ComObject WScript.Shell\\).CreateShortcut\\('C:\\\\Users\\\\Georg\\\\Desktop\\\\Godot.lnk'\\).TargetPath\")",
+      "Bash(winget search *)",
+      "Bash(ls \"E:/Godot_v4.6.1-stable_win64.exe/\")",
+      "Read(//e/Godot_v4.6.1-stable_win64.exe/**)"
+    ]
+  }
+}

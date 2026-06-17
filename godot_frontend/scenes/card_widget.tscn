@@ -1,0 +1,37 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/card_widget.gd" id="1_script"]
+
+[node name="CardWidget" type="Control"]
+custom_minimum_size = Vector2(150, 200)
+script = ExtResource("1_script")
+
+[node name="Panel" type="Panel" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="CostLabel" type="Label" parent="Panel"]
+offset_left = 4.0
+offset_top = 4.0
+offset_right = 30.0
+offset_bottom = 30.0
+text = "1"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="NameLabel" type="Label" parent="Panel"]
+offset_left = 4.0
+offset_top = 34.0
+offset_right = 146.0
+offset_bottom = 60.0
+text = "卡牌名"
+horizontal_alignment = 1
+
+[node name="EffectLabel" type="Label" parent="Panel"]
+offset_left = 8.0
+offset_top = 68.0
+offset_right = 142.0
+offset_bottom = 192.0
+text = "效果描述"
+autowrap_mode = 3

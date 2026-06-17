@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CardData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/card_data.gd" id="1_card"]
+[ext_resource type="Script" path="res://scripts/resources/effect_data.gd" id="1_effect"]
+
+[resource]
+script = ExtResource("1_card")
+id = "defend"
+card_name = "防御"
+base_cost = 1
+effects = Array[ExtResource("1_effect")]([SubResource("EffectData_defend")])
+
+[sub_resource type="Resource" id="EffectData_defend"]
+script = ExtResource("1_effect")
+effect_type = 1
+value = 5
+target = 0

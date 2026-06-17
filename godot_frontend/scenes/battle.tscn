@@ -1,0 +1,206 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/battle_controller.gd" id="1_controller"]
+[ext_resource type="Script" path="res://scripts/ui/enemy_display.gd" id="2_enemy"]
+[ext_resource type="Script" path="res://scripts/ui/player_hud.gd" id="3_player"]
+[ext_resource type="Script" path="res://scripts/ui/energy_display.gd" id="4_energy"]
+[ext_resource type="Script" path="res://scripts/ui/pile_display.gd" id="5_pile"]
+[ext_resource type="Script" path="res://scripts/ui/card_hand.gd" id="6_hand"]
+[ext_resource type="Script" path="res://scripts/ui/battle_result.gd" id="7_result"]
+
+[node name="BattleScene" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_controller")
+
+[node name="TurnBanner" type="Label" parent="."]
+layout_mode = 0
+offset_left = 440.0
+offset_top = 10.0
+offset_right = 840.0
+offset_bottom = 60.0
+text = ""
+horizontal_alignment = 1
+modulate = Color(1, 1, 1, 0)
+
+[node name="EnemyDisplay" type="Control" parent="."]
+layout_mode = 0
+offset_left = 400.0
+offset_top = 80.0
+offset_right = 880.0
+offset_bottom = 240.0
+script = ExtResource("2_enemy")
+
+[node name="NameLabel" type="Label" parent="EnemyDisplay"]
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 480.0
+offset_bottom = 36.0
+text = "敌人名"
+horizontal_alignment = 1
+
+[node name="HPBar" type="ProgressBar" parent="EnemyDisplay"]
+offset_left = 40.0
+offset_top = 44.0
+offset_right = 440.0
+offset_bottom = 68.0
+max_value = 40.0
+value = 40.0
+show_percentage = false
+
+[node name="HPLabel" type="Label" parent="EnemyDisplay"]
+offset_left = 0.0
+offset_top = 72.0
+offset_right = 480.0
+offset_bottom = 96.0
+text = "生命: 40 / 40"
+horizontal_alignment = 1
+
+[node name="BlockLabel" type="Label" parent="EnemyDisplay"]
+offset_left = 0.0
+offset_top = 100.0
+offset_right = 480.0
+offset_bottom = 124.0
+text = "格挡: 0"
+horizontal_alignment = 1
+visible = false
+
+[node name="IntentLabel" type="Label" parent="EnemyDisplay"]
+offset_left = 0.0
+offset_top = 132.0
+offset_right = 480.0
+offset_bottom = 156.0
+text = "意图: ???"
+horizontal_alignment = 1
+
+[node name="PlayerHUD" type="Control" parent="."]
+layout_mode = 0
+offset_left = 40.0
+offset_top = 500.0
+offset_right = 360.0
+offset_bottom = 660.0
+script = ExtResource("3_player")
+
+[node name="HPLabel" type="Label" parent="PlayerHUD"]
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 320.0
+offset_bottom = 30.0
+text = "生命: 50 / 50"
+
+[node name="HPBar" type="ProgressBar" parent="PlayerHUD"]
+offset_left = 0.0
+offset_top = 34.0
+offset_right = 320.0
+offset_bottom = 56.0
+max_value = 50.0
+value = 50.0
+show_percentage = false
+
+[node name="BlockLabel" type="Label" parent="PlayerHUD"]
+offset_left = 0.0
+offset_top = 62.0
+offset_right = 320.0
+offset_bottom = 86.0
+text = "格挡: 0"
+visible = false
+
+[node name="EnergyDisplay" type="Control" parent="."]
+layout_mode = 0
+offset_left = 40.0
+offset_top = 460.0
+offset_right = 260.0
+offset_bottom = 490.0
+script = ExtResource("4_energy")
+
+[node name="Label" type="Label" parent="EnergyDisplay"]
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 220.0
+offset_bottom = 30.0
+text = "能量: 2 / 2"
+
+[node name="PileDisplay" type="Control" parent="."]
+layout_mode = 0
+offset_left = 860.0
+offset_top = 500.0
+offset_right = 1240.0
+offset_bottom = 560.0
+script = ExtResource("5_pile")
+
+[node name="DrawPile" type="Label" parent="PileDisplay"]
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 380.0
+offset_bottom = 30.0
+text = "抽牌堆: 16"
+horizontal_alignment = 2
+
+[node name="Discard" type="Label" parent="PileDisplay"]
+offset_left = 0.0
+offset_top = 34.0
+offset_right = 380.0
+offset_bottom = 60.0
+text = "弃牌堆: 0"
+horizontal_alignment = 2
+
+[node name="EndTurnButton" type="Button" parent="."]
+layout_mode = 0
+offset_left = 1040.0
+offset_top = 460.0
+offset_right = 1240.0
+offset_bottom = 494.0
+text = "结束回合"
+
+[node name="CardHand" type="Control" parent="."]
+layout_mode = 0
+offset_left = 60.0
+offset_top = 570.0
+offset_right = 1220.0
+offset_bottom = 720.0
+script = ExtResource("6_hand")
+
+[node name="BattleResult" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("7_result")
+
+[node name="Panel" type="Panel" parent="BattleResult"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -100.0
+offset_right = 150.0
+offset_bottom = 100.0
+
+[node name="ResultLabel" type="Label" parent="BattleResult/Panel"]
+offset_left = 0.0
+offset_top = 10.0
+offset_right = 300.0
+offset_bottom = 50.0
+text = ""
+horizontal_alignment = 1
+
+[node name="RestartButton" type="Button" parent="BattleResult/Panel"]
+offset_left = 40.0
+offset_top = 110.0
+offset_right = 120.0
+offset_bottom = 140.0
+text = "再来一局"
+
+[node name="QuitButton" type="Button" parent="BattleResult/Panel"]
+offset_left = 180.0
+offset_top = 110.0
+offset_right = 260.0
+offset_bottom = 140.0
+text = "退出"

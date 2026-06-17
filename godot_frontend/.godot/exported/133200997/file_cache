@@ -1,0 +1,5 @@
+res://resources/enemies/training_dummy.tres::bba0d15768ac79242e5f94f84a1b6e7e::1779807184::res://.godot/exported/133200997/export-3b376ec6e7a817d47ac20988dbd37435-training_dummy.res
+res://resources/fonts/default_font.tres::55c34ce9f261658dd4780ddad2532419::1779808169::res://.godot/exported/133200997/export-cf99f71e99334f7697f4981df5369af7-default_font.res
+res://resources/default_theme.tres::942461c5e3d1a9efd1ef8d7385c24e1d::1779808170::res://.godot/exported/133200997/export-c391164591373fafde3ce784a3ee412f-default_theme.res
+res://scenes/battle.tscn::914892137f4d534ad2a24c36cfa41d37::1779807465::res://.godot/exported/133200997/export-d05c42cb8fa14c775531fe94d95302c2-battle.scn
+res://scenes/card_widget.tscn::4602cd8dbac372d8f8fc6485c463dfef::1779807435::res://.godot/exported/133200997/export-6c412b16444b0b5d4608599166af7ac8-card_widget.scn
